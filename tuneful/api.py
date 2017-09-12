@@ -1,10 +1,15 @@
 song_schema = {
-    "properties": {
+    "type": "object",
+    "properties": { 
         "file": {
-            "name": {"type" : "string"}
-        }
-    },
-    #"required": ["id",]
+            "type": "object", 
+            "properties": {
+                #"name": {"type" : "string"},
+                "id": {"type" : "number"}
+                            },
+                },
+            },
+    "required": ["file"]
 }
 
 import os.path
@@ -29,9 +34,6 @@ def songs_get():
     
     songs = session.query(models.Song)
     
-    if name_like:
-        songs = songs.filter(models.Song.file.name.contains(name_like))
-    
     songs = songs.order_by(models.Song.id)
     
     data = json.dumps([song.as_dictionary() for song in songs])
@@ -50,11 +52,10 @@ def songs_post():
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
     
-    #file = models.File(name=data["file.name"])
-    file = models.File()
     song = models.Song()
     
-    song.file = file
+    file = session.query(models.File).get(data["file"]["id"])
+    song.file_id = file.id
     
     session.add(song)
     session.commit()
@@ -78,14 +79,14 @@ def songs_put(id):
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
         
-    song = models.Song.file(name=data["name"])
-    session.query(models.Song).get(id).update(song)
+    song = session.query(models.Song).get(id)
+    song.file_id = (data["file"]["id"])
     session.commit()
     
     data = json.dumps(song.as_dictionary())
-    headers = {"Location": url_for("post_get")}
+    headers = {"Location": url_for("songs_get")}
     return Response(data, 201, headers=headers,
-        mimetype="application.json")
+        mimetype="application/json")
     
 @app.route("/api/songs/<int:id>", methods=["DELETE"])
 @decorators.accept("application/json")
@@ -107,5 +108,4 @@ def songs_delete(id):
     
     data = json.dumps([song.as_dictionary() for song in songs])
     return Response(data, 200, mimetype="application.json")
-    
     
