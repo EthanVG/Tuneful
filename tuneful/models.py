@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import session
+from flask import url_for
 
 from .database import Base
 
@@ -15,7 +16,7 @@ class Song(Base):
             "id": self.id,
             "file": {
                 "id": song_file_info.id,
-                #"name": self.file.name
+                "name": song_file_info.name
             }
         }
         return song
@@ -29,6 +30,7 @@ class File(Base):
     def as_dictionary(self):
         file = {
             "id": self.id,
-            "name": self.name
+            "name": self.name,
+            "path": url_for("uploaded_file", filename=self.name)
             }
         return file
